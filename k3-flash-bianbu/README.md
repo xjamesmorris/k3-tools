@@ -1,4 +1,4 @@
-# spacemit-k3 tools
+# K3-CoM260 tools
 
 Tools for working with the [SpacemiT K3](https://www.spacemit.com/) RISC-V
 compute module — developed and tested against a **K3-CoM260** on a Firefly
@@ -53,6 +53,8 @@ Confirm with `fastboot devices`. The board enumerates as
 
 ## Usage
 
+From the repository root, run `cd tools` before using the commands below.
+
 ```
 k3-flash-bianbu.sh [--check | --register-image] [--rm] [--download-dir DIR]
                    <image-dir | release.tar.gz | https://…tar.gz>
@@ -83,7 +85,8 @@ Releases are published at
 <https://archive.spacemit.com/image/k3/version/bianbu/> (there is also a
 [JS file browser](https://spacemit.com/community/resources-download/Images%20Collects/K3/Bianbu)).
 
-Extractions land in `images/`, which is gitignored — a full release is
+Extractions land in `tools/images/` relative to the repository root, which is
+gitignored — a full release is
 several GB, and the LXQt rootfs alone is 8 GB. Re-running against the same
 tarball reuses an existing extraction instead of unpacking it again, so
 retrying after an interrupted flash is cheap.
@@ -197,7 +200,7 @@ unimplemented ideas.
 
 ## License
 
-GPL-2.0-only. See [`LICENSE`](LICENSE).
+GPL-2.0-only. See [`LICENSE`](../LICENSE).
 
 Copyright © 2026 James Morris.
 
