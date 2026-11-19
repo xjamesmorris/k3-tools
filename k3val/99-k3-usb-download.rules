@@ -1,0 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-only
+# Temporary, for RAM-only M-mode runs: the K3 boot ROM's and vendor SPL's
+# USB download gadget (361c:1001, one fastboot interface ff/42/03). Lets the
+# dialout group open it without root. Remove after the run.
+SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTR{idVendor}=="361c", ATTR{idProduct}=="1001", GROUP="dialout", MODE="0660"

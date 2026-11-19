@@ -1,0 +1,161 @@
+#!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-2.0-only
+"""k3val - architecture test runs for the SpacemiT K3, on QEMU and the X100.
+
+The first suites are XUANTIE-RV's DAMO RV64 privileged and unprivileged
+architecture tests, at pinned revisions. Each command runs one script in
+this directory with the arguments given; `k3val COMMAND --help` shows that
+script's help. Read README.md before any board command.
+
+Workstation:
+  suites      show the pinned suites and the suites never run on the X100
+  qemu        build and run a suite on QEMU: qemu {priv|unpriv} SOURCE OUT
+  pack        pack the unprivileged ELFs for the K3: pack SOURCE QEMU_OUT BUNDLE
+  build-x100  build the privileged suite as X100 M-mode RAM payloads
+  classify    turn board transcripts into the QEMU run's verdicts
+
+K3 board (attended only; see README.md):
+  native      run the packed unprivileged ELFs on the board's Linux
+  board       the M-mode payload runner: preflight, shutdown, run, restore
+  x100-priv   run the built privileged payloads, never-run suites excluded
+"""
+
+import argparse
+import csv
+import hashlib
+import importlib.util
+import os
+import shlex
+import sys
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+END = "K3-DAMO-HALT: (PASS|FAIL)"
+SCRIPTS = {
+    "qemu": "run-damo-ats.py",
+    "native": "run-damo-ats.py",
+    "pack": "pack-damo-x100.sh",
+    "build-x100": "build-damo-k3-priv.sh",
+    "board": "k3-mmode-run.py",
+    "classify": "classify-damo-k3-priv.py",
+}
+
+
+def load(script):
+    name = script.removesuffix(".py").replace("-", "_")
+    spec = importlib.util.spec_from_file_location(name, HERE / script)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def execute(script, args):
+    path = str(HERE / script)
+    os.execv(path, [path, *args])
+
+
+def suites():
+    for mode, (repo, revision) in load("run-damo-ats.py").PINS.items():
+        print(f"{mode:7} XUANTIE-RV/{repo} {revision}")
+    never = " ".join(sorted(load("k3-mmode-run.py").X100_NEVER_RUN))
+    print(f"never run on the X100: {never}")
+    return 0
+
+
+def x100_priv(argv):
+    parser = argparse.ArgumentParser(
+        prog="k3val x100-priv",
+        description="Run each built privileged payload on the K3 X100 through "
+        "k3-mmode-run.py, in build order, skipping the never-run suites and "
+        "failed builds. Board settings come from these options or K3VAL_* "
+        "environment variables; see k3-mmode-run.py --help.",
+    )
+    parser.add_argument("build", type=Path, help="build-x100 output directory")
+    parser.add_argument("out", type=Path, help="new transcript directory")
+    parser.add_argument(
+        "--suite",
+        action="append",
+        default=[],
+        help="run only this suite; repeat for more",
+    )
+    parser.add_argument(
+        "--from-fedora",
+        action="store_true",
+        help="first reboot the board's Linux over SSH, then go to recovery",
+    )
+    parser.add_argument(
+        "--timeout", type=float, default=120, help="seconds per payload (120)"
+    )
+    parser.add_argument("--record", type=Path, help="append JSON events here")
+    for option in ("--k3ctl", "--fsbl", "--serial-log", "--ssh-target"):
+        parser.add_argument(option, help="passed to k3-mmode-run.py")
+    parser.add_argument(
+        "--dry-run", action="store_true", help="print the runner command only"
+    )
+    opts = parser.parse_args(argv)
+    never = load("k3-mmode-run.py").X100_NEVER_RUN
+    manifest = opts.build / "manifest.tsv"
+    if not manifest.is_file():
+        parser.error(f"{manifest} not found; run k3val build-x100 first")
+    with manifest.open() as f:
+        rows = list(csv.DictReader(f, delimiter="\t"))
+    built = {r["suite"]: r for r in rows if r["build_rc"] == "0"}
+    names = list(dict.fromkeys(opts.suite)) or [r["suite"] for r in rows]
+    payloads = []
+    for name in names:
+        if name in never:
+            if opts.suite:
+                parser.error(f"{name} must never run on the X100")
+            continue
+        if name not in built:
+            if opts.suite:
+                parser.error(f"{name} was not built in {opts.build}")
+            continue
+        itb = opts.build / "itb" / f"{name}.itb"
+        if not itb.is_file() or (
+            hashlib.sha256(itb.read_bytes()).hexdigest() != built[name]["itb_sha256"]
+        ):
+            parser.error(f"{itb} is missing or does not match {manifest}")
+        payloads.append(str(itb))
+    if not payloads:
+        parser.error("no payloads to run")
+    cmd = [str(HERE / "k3-mmode-run.py")]
+    for option in ("k3ctl", "fsbl", "serial_log", "ssh_target", "record"):
+        value = getattr(opts, option)
+        if value is not None:
+            cmd += ["--" + option.replace("_", "-"), str(value)]
+    cmd += ["run", "--out", str(opts.out), "--end", END, "--timeout", f"{opts.timeout:g}"]
+    if opts.from_fedora:
+        cmd.append("--from-fedora")
+    cmd += payloads
+    if opts.dry_run:
+        print(shlex.join(cmd))
+        return 0
+    os.execv(cmd[0], cmd)
+
+
+def main():
+    argv = sys.argv[1:]
+    if not argv or argv[0] in ("-h", "--help"):
+        print(__doc__.strip())
+        return 0 if argv else 2
+    command, rest = argv[0], argv[1:]
+    if command == "suites":
+        return suites()
+    if command == "x100-priv":
+        return x100_priv(rest)
+    if command == "qemu" and not (
+        rest and rest[0] in ("priv", "unpriv", "-h", "--help")
+    ):
+        print("usage: k3val qemu {priv|unpriv} SOURCE OUT [--jobs N]", file=sys.stderr)
+        return 2
+    if command == "native":
+        rest = ["x100", *rest]
+    if command not in SCRIPTS:
+        print(f"k3val: unknown command {command!r}; see k3val --help", file=sys.stderr)
+        return 2
+    execute(SCRIPTS[command], rest)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

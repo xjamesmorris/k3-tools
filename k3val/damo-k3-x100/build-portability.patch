@@ -1,0 +1,30 @@
+diff --git a/common/test_framework.c b/common/test_framework.c
+index 1062136..4e7055b 100644
+--- a/common/test_framework.c
++++ b/common/test_framework.c
+@@ -47,7 +47,8 @@ test_result_t test_results = {
+  * Smmpm, so a platform declaring none of them compiles both out -- which also
+  * keeps the unused static helper from triggering -Wunused-function. */
+ #if ZICFILP_AVAILABLE || ZICFISS_AVAILABLE || \
+-    SMNPM_AVAILABLE   || SSNPM_AVAILABLE   || SMMPM_AVAILABLE
++    SMNPM_AVAILABLE   || SSNPM_AVAILABLE   || SMMPM_AVAILABLE || \
++    defined(ENABLE_PM)
+ /* ===================================================================
+  * _safe_csr_clear_field - trap-protected CSR field clearing
+  *
+diff --git a/common/test_framework.h b/common/test_framework.h
+index 167c083..284333c 100644
+--- a/common/test_framework.h
++++ b/common/test_framework.h
+@@ -388,6 +388,11 @@ extern bool g_trap_force_pelp;
+  * while making M_TRAP_EXPECT_* safe to arm from S-mode.
+  * =================================================================== */
+ 
++/* Ssdbltrp's environment probe names the bit even without Smdbltrp. */
++#if __riscv_xlen == 64 && !defined(SMDBLTRP_SUPPORTED)
++#define MSTATUS_MDT_BIT  (1UL << 42)
++#endif
++
+ #ifdef SMDBLTRP_SUPPORTED
+ #if __riscv_xlen == 64
+ #define MSTATUS_MDT_BIT  (1UL << 42)

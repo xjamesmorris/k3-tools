@@ -9,3 +9,6 @@
 # Python bytecode
 __pycache__/
 *.py[cod]
+# Local work areas: suite checkouts, builds and run outputs, probe builds
+/scratch/
+/k3val/probe/build/
