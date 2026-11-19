@@ -8,13 +8,15 @@ and tested with a **K3-CoM260** module on a Firefly carrier board. Other K3
 modules and carriers have not been tested.
 
 Board notes, hardware findings and the Fedora developer wiki are in
-[k3-com260-info](https://github.com/xjamesmorris/k3-com260-info). These tools
-moved here from its `tools/` directory on 2026-11-19, with their history.
+[k3-com260-info](https://github.com/xjamesmorris/k3-com260-info). k3ctl and
+k3-flash-bianbu moved here from its `tools/` directory on 2026-11-19, with
+their history.
 
 | Tool | Purpose | Hardware status |
 | --- | --- | --- |
 | [`k3ctl`](k3ctl/README.md) | Control header buttons over USB using an ESP32-C3 dongle | **Reset, bounded button-power results and logo screensaver observed**; software-shutdown wake remains unresolved |
 | [`k3-flash-bianbu`](k3-flash-bianbu/README.md) | Factory flash an official Bianbu K3 release using stock `fastboot` | See the [image results](k3-flash-bianbu/README.md#status); a manifest pin is not a flash result |
+| [`k3val`](k3val/README.md) | Run architecture test suites on QEMU and the K3 X100, starting with XUANTIE-RV's DAMO suites | Tool only; no results are published here yet |
 
 ## k3ctl: USB button control
 
@@ -63,6 +65,16 @@ environment; an attached NVMe drive is not touched. Read the
 [development context](k3-flash-bianbu/k3-flash-bianbu-HANDOFF.md) records
 protocol findings, design decisions and ideas for further work.
 
+## k3val: architecture test runs
+
+[`k3val/`](k3val/README.md) builds and runs XUANTIE-RV's DAMO RV64
+privileged and unprivileged architecture suites, at pinned revisions, on
+workstation QEMU and on the K3's X100 cores. Unprivileged programs run under
+Linux on the board. Privileged tests run as M-mode RAM payloads, entered by
+the vendor SPL in the boot ROM's USB download mode through k3ctl, so nothing
+is written to the board's storage. It includes a K3 X100 port of the
+privileged suite and an M-mode profile probe.
+
 ## Safety
 
 - Reset, power, recovery and flashing act on real hardware. Use them only
@@ -98,4 +110,7 @@ commits that are not here.
 
 ## License
 
-GPL-2.0-only. See [LICENSE](LICENSE).
+GPL-2.0-only. See [LICENSE](LICENSE). The K3 X100 port in
+[`k3val/damo-k3-x100/`](k3val/damo-k3-x100/README.md) keeps the licenses of
+the upstream files it derives from: Apache-2.0, BSD-3-Clause and
+BSD-3-Clause-Clear, with their texts in [`LICENSES/`](LICENSES/).

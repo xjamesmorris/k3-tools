@@ -38,10 +38,10 @@ sign-off, and publication requirements.
 ## Validation and safety
 
 Use the relevant existing checks and report their limits. For modified Bash
-scripts, run `bash -n` and `shellcheck`; for k3ctl, run its hardware-free
-tests. Consult each tool's README for its requirements. Do not equate syntax
-checks, hashes, builds, host tests, or patch replay with successful hardware
-operation.
+scripts, run `bash -n` and `shellcheck`; for k3ctl and k3val, run their
+hardware-free tests. Consult each tool's README for its requirements. Do not
+equate syntax checks, hashes, builds, host tests, or patch replay with
+successful hardware operation.
 
 Never flash a board, overwrite a disk, change its boot environment, or reset,
 power-cycle, or reboot it as an automated contribution check. Such work needs

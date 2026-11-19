@@ -50,6 +50,42 @@ state change. New hardware results need an attended test recording the
 module/carrier, K3 firmware/OS, exact ESP32 source/build and dependency
 versions, date, commands, observed outcome and failures.
 
+# k3val
+
+`k3val/` runs architecture test suites, starting with XUANTIE-RV's DAMO
+suites at pinned revisions, on QEMU and on the K3 X100. `k3val/README.md`
+is the authority for its procedures and safety basis. Keep these invariants:
+
+- The board runner (`k3-mmode-run.py`) sends only fastboot `getvar`,
+  `stage` and `continue`, stops if vendor U-Boot proper's banner appears,
+  never types on the serial console (it reads the picocom log), keeps the
+  FSBL SHA-256 pin and strict SSH host-key checking, and refuses every suite
+  in `X100_NEVER_RUN` before touching the board. Do not add workstation
+  defaults for its board settings.
+- Builders clone the upstream suites at pinned revisions; do not copy the
+  suites into this repository, and do not commit vendor firmware such as
+  `FSBL.bin`.
+- `damo-k3-x100/` keeps upstream notices. The build requires
+  `config/k3-x100/rvtest_config.h` to equal `make-rvtest-config.py`'s output
+  and records SHA-256 values of the patches and config files, so changing
+  them changes recorded build identities.
+- Keep QEMU results apart from K3 results, and keep host tests and builds
+  apart from hardware results. Publishing test results is a separate human
+  decision.
+
+```sh
+# Hardware-free tests
+python3 -B k3val/tests/test_k3val.py
+
+# Shell and Python checks
+bash -n k3val/pack-damo-x100.sh k3val/build-damo-k3-priv.sh
+shellcheck k3val/pack-damo-x100.sh k3val/build-damo-k3-priv.sh
+```
+
+A QEMU run (`k3val/k3val qemu priv SOURCE NEW_OUT`) builds and runs all 75
+privileged images without hardware. Never run `board`, `x100-priv` or
+`native` commands as automated checks.
+
 # Existing flashing tool architecture
 
 `k3-flash-bianbu/k3-flash-bianbu.sh` is a standalone Bash factory-flashing
