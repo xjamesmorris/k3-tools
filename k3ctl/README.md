@@ -28,7 +28,7 @@ Do not issue board-control commands as unattended contribution checks.
 
 This tool is standalone. `k3-flash-bianbu.sh` does **not** call it and has
 **no `-r` option**. Use the existing
-[manual recovery instructions](../README.md#putting-the-board-in-recovery)
+[manual recovery instructions](../k3-flash-bianbu/README.md#putting-the-board-in-recovery)
 for factory flashing. The one recorded k3ctl recovery entry was not followed
 by a flash and does not establish repeatability.
 
@@ -43,10 +43,10 @@ by a flash and does not establish repeatability.
 | [`99-k3ctl.rules`](99-k3ctl.rules) | Optional Linux udev rule for `/dev/k3ctl` and port permissions |
 | [`tests/test_k3ctl.py`](tests/test_k3ctl.py) | Hardware-free client tests using a pseudo-terminal |
 
-Run the commands below from `tools/k3ctl/`; from the repository root:
+Run the commands below from `k3ctl/`; from the repository root:
 
 ```sh
-cd tools/k3ctl
+cd k3ctl
 ```
 
 ## Hardware
@@ -76,7 +76,7 @@ Video: [Watch k3ctl v1.1.1 on YouTube](https://www.youtube.com/shorts/w1l2AyYvUZ
 
 **Match the actual carrier's numbering, orientation, ground and signals
 before wiring.** The
-[conditional header reference](../../wiki/Console-and-Recovery.md#conditional-12-pin-header-reference)
+[conditional header reference](https://github.com/xjamesmorris/k3-com260-info/wiki/Console-and-Recovery#conditional-12-pin-header-reference)
 explains the Firefly scope and the vendor reference-kit guide. This is not
 a universal K3-CoM260 pinout; do not apply it to another carrier by inference.
 Choose the pins **5/6** jumper configuration from the
@@ -187,7 +187,7 @@ jumper state and the carrier PCB revision were not recorded with this result.
 
 Before each send, Fedora was stopped with `systemctl reboot`, which on this
 board halted after `reboot: Restarting system` (as in the
-[F45 host record](../../fedora-45/RESULTS.md)); each `recovery` therefore
+[F45 host record](https://github.com/xjamesmorris/k3-com260-info/blob/main/fedora-45/RESULTS.md)); each `recovery` therefore
 reached a halted, powered board. `fwupd` was stopped on the workstation for
 the test so that it could not send its own fastboot queries to the BootROM.
 
@@ -477,7 +477,7 @@ host test into a hardware result.
 
 ## License and assistance
 
-GPL-2.0-only; see the repository [LICENSE](../../LICENSE).
+GPL-2.0-only; see the repository [LICENSE](../LICENSE).
 
 The initial implementation was prepared with **Claude Fable 5.1**, as
 reported by the maintainer. Repository integration, licensing headers and
@@ -486,4 +486,4 @@ version 1.1 firmware (display, logo, line monitoring and power commands),
 the 1.1.1 screensaver update,
 `make-logo.py` and related client changes. The human contributor
 remains responsible for reviewing and understanding the contribution,
-provenance and publication under the [LLM policy](../../LLM-POLICY.md).
+provenance and publication under the [LLM policy](../LLM-POLICY.md).

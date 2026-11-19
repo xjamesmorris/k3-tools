@@ -1,51 +1,8 @@
-# K3-CoM260 tools
+# k3-flash-bianbu.sh: factory flashing
 
-Tools for working with the [SpacemiT K3](https://www.spacemit.com/) RISC-V
-compute module — developed and tested against a **K3-CoM260** on a Firefly
-carrier board.
-
-| Tool | Purpose | Hardware status |
-| --- | --- | --- |
-| [`k3-flash-bianbu.sh`](k3-flash-bianbu.sh) | Factory flash an official Bianbu K3 release using stock `fastboot` | See the [image results](#status); a manifest pin is not a flash result |
-| [`k3ctl`](k3ctl/README.md) | Control header buttons over USB using an ESP32-C3 dongle | **Reset, bounded button-power results and logo screensaver observed**; software-shutdown wake remains unresolved |
-
-## k3ctl: USB button control
-
-[`k3ctl/`](k3ctl/README.md) contains the ESP32-C3 firmware, a standard-library
-Python client, a Linux udev rule, and tests against a fake dongle on a
-pseudo-terminal. Its guide covers the conditional Firefly header wiring,
-firmware build requirements, host setup, command protocol, and GPL-2.0-only
-licensing.
-
-**Reset is maintainer-reported working. Power-button behavior depends on the
-jumper and off state.** Earlier October 30-31 power-on failures remain
-recorded. In the November 6-7 attended firmware 1.1 test with pins **5/6
-bridged**, DC insertion left the K3 off; a **300 ms** press powered it on.
-The same press worked after forced power-off, but failed after software
-shutdown. Removing/reconnecting DC, then pressing for 300 ms, restored
-power-on. While running, 300 ms, 1 s, 3 s and 6 s left it on; **12 s cut
-power abruptly**, not as a clean shutdown. See the
-[recorded results and limitations](k3ctl/README.md#recorded-hardware-results).
-Do not change the jumper with DC connected or generalize this result to
-another carrier or firmware.
-
-The 1.1.1 bright-then-dim moving logo and event-reset countdown were observed
-on the dongle. On 2026-11-17, `recovery` entered BootROM USB mode once on a
-halted board (`version-brom: 1.0`); with its wire unattached it only reset
-the board. Power sensing, the sensed `ON` display,
-external LED/DC switch and named `power on|off|force-off` modes remain
-unverified; client/build checks are not hardware evidence. Reset and forced
-power-off can lose unsaved data.
-
-This is a standalone tool, not a Fedora installation prerequisite.
-`k3-flash-bianbu.sh` does not invoke it and has no `-r` option; keep the
-documented manual recovery procedure for factory flashing, since no flash
-has followed a k3ctl recovery entry.
-
-## k3-flash-bianbu.sh: factory flashing
-
-Factory-flash a board from an official Bianbu K3 release tarball using plain
-`fastboot`.
+Factory-flash a [SpacemiT K3](https://www.spacemit.com/) board from an
+official Bianbu K3 release tarball using plain `fastboot`. Developed and
+tested against a **K3-CoM260** on a Firefly carrier board.
 
 > **Factory flashing erases the board.** It rewrites the NOR firmware and wipes every UFS
 > partition, including the environment. An attached NVMe drive is *not*
@@ -91,9 +48,14 @@ Firefly carrier's 12-pin header:
 Confirm with `fastboot devices`. The board enumerates as
 `???????????? DFU download` — **the blank serial is normal**, not a fault.
 
+[`k3ctl`](../k3ctl/README.md) can hold FC_REC through a reset, but this
+script does not invoke it and has no `-r` option. Keep this manual
+procedure for factory flashing, since no flash has followed a k3ctl
+recovery entry.
+
 ## Usage
 
-From the repository root, run `cd tools` before using the commands below.
+From the repository root, run `cd k3-flash-bianbu` before using the commands below.
 
 ```
 k3-flash-bianbu.sh [--check | --register-image] [--rm] [--download-dir DIR]
@@ -125,7 +87,7 @@ Releases are published at
 <https://archive.spacemit.com/image/k3/version/bianbu/> (there is also a
 [JS file browser](https://spacemit.com/community/resources-download/Images%20Collects/K3/Bianbu)).
 
-Extractions land in `tools/images/` relative to the repository root, which is
+Extractions land in `k3-flash-bianbu/images/` relative to the repository root, which is
 gitignored — a full release is
 several GB, and the LXQt rootfs alone is 8 GB. Re-running against the same
 tarball reuses an existing extraction instead of unpacking it again, so

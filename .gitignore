@@ -1,6 +1,11 @@
 # Extraction area used by k3-flash-bianbu.sh archive mode (multi-GB)
-/images/
+/k3-flash-bianbu/images/
+# Downloaded releases and in-progress downloads (the script's default)
+/downloads/
 # Release archives may be parked in the repo dir; never commit them
 *.tar.gz
 *.tgz
 *.img.gz
+# Python bytecode
+__pycache__/
+*.py[cod]
